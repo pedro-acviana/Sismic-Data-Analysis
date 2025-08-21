@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise Interativa de Dados Sísmicos</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 800px;
+            margin: 2rem;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 2.5rem;
+        }
+        .subtitle {
+            color: #666;
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        .feature {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        .feature h3 {
+            color: #333;
+            margin: 0.5rem 0;
+        }
+        .feature p {
+            color: #666;
+            margin: 0;
+            font-size: 0.9rem;
+        }
+        .launch-btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            text-decoration: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin: 2rem 1rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .launch-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 2rem 0;
+            border-left: 4px solid #2196f3;
+        }
+        .info h3 {
+            color: #1976d2;
+            margin-top: 0;
+        }
+        .github-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .github-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔬 Análise Interativa de Dados Sísmicos</h1>
+        <p class="subtitle">Plataforma web para análise automática de energia e detecção de ruídos em dados sismológicos</p>
+        
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">📁</div>
+                <h3>Upload Simples</h3>
+                <p>Carregue arquivos CSV diretamente no navegador</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">⚡</div>
+                <h3>Análise Automática</h3>
+                <p>Cálculo de energia total E = √(x² + y² + z²)</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🔍</div>
+                <h3>Detecção de Ruídos</h3>
+                <p>Identificação automática de eventos anômalos</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">📊</div>
+                <h3>Visualizações</h3>
+                <p>Gráficos interativos e estatísticas detalhadas</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">💾</div>
+                <h3>Export Resultados</h3>
+                <p>Download de CSV processado com todas as análises</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🚀</div>
+                <h3>Zero Instalação</h3>
+                <p>Funciona diretamente no navegador</p>
+            </div>
+        </div>
+
+        <a href="webapp_analysis.html" class="launch-btn">🚀 Iniciar Análise</a>
+        
+        <div class="info">
+            <h3>📋 Formato de Dados Esperado</h3>
+            <p>O arquivo CSV deve conter as colunas: <code>event_id</code>, <code>plane</code>, <code>sensor</code>, <code>x_amplitude</code>, <code>y_amplitude</code>, <code>z_amplitude</code></p>
+        </div>
+
+        <div class="info">
+            <h3>🔬 Sobre o Projeto</h3>
+            <p>Esta ferramenta foi desenvolvida para análise de dados sismológicos, focando em ortogonalização de sensores e detecção automática de ruídos. 
+            Código fonte disponível no <a href="https://github.com/pedro-acviana/Sismic-Data-Analysis" class="github-link">GitHub</a>.</p>
+        </div>
+        
+        <p style="margin-top: 2rem; color: #666; font-size: 0.9rem;">
+            Projeto Braskem - Análise Sismológica | Desenvolvido com Jupyter, Voilà e GitHub Pages
+        </p>
+    </div>
+</body>
+</html>

@@ -2,6 +2,25 @@
 
 Este repositório contém ferramentas e notebooks para análise de dados sismológicos, com foco em ortogonalização de sensores e análise de ruídos em dados sísmicos.
 
+## 🌐 Aplicação Web Interativa
+
+**🚀 [Acesse a aplicação web aqui](https://pedro-acviana.github.io/Sismic-Data-Analysis/)**
+
+A aplicação web permite:
+- **Upload direto de arquivos CSV** no navegador
+- **Análise automática** de energia total e detecção de ruídos
+- **Visualizações interativas** em tempo real
+- **Download de resultados** processados
+- **Zero instalação** - funciona direto no GitHub Pages
+
+### Características da Aplicação Web:
+- ✅ Interface amigável e responsiva
+- ✅ Processamento em tempo real no navegador
+- ✅ Validação automática de formato dos dados
+- ✅ Gráficos interativos com matplotlib
+- ✅ Export automático de resultados em CSV
+- ✅ Feedback visual do progresso da análise
+
 ## 📋 Descrição do Projeto
 
 O projeto tem como objetivo principal:
@@ -17,8 +36,12 @@ O projeto tem como objetivo principal:
 data_analysis/
 ├── README.md                              # Este arquivo
 ├── .gitignore                            # Arquivos ignorados pelo Git
-├── analise_energia_total.ipynb            # Notebook principal de análise
-├── ortogonalizacao_sensores_notebook.ipynb # Notebook de ortogonalização
+├── webapp_analysis.ipynb                 # 🌐 Notebook da aplicação web interativa
+├── analise_energia_total.ipynb            # 📓 Notebook de análise local
+├── ortogonalizacao_sensores_notebook.ipynb # 📊 Notebook de ortogonalização
+├── index.html                            # 🏠 Página inicial da aplicação web
+├── requirements.txt                      # 📦 Dependências Python
+├── .github/workflows/deploy.yml          # 🚀 Deploy automático GitHub Pages
 ├── Braskem_dados/                        # Dados de entrada (ver README específico)
 │   └── Eventos/                          # Dados de eventos sísmicos
 ├── resultados_csv/                       # Resultados processados (ver README específico)
@@ -62,17 +85,25 @@ data_analysis/
 
 ## 🚀 Como Usar
 
-### Pré-requisitos
+### 🌐 Opção 1: Aplicação Web (Recomendado)
+1. Acesse: **https://pedro-acviana.github.io/Sismic-Data-Analysis/**
+2. Carregue seu arquivo CSV usando o botão de upload
+3. Aguarde o processamento automático
+4. Visualize os resultados e baixe o arquivo processado
+
+### 💻 Opção 2: Execução Local
+
+#### Pré-requisitos
 ```bash
-pip install pandas numpy matplotlib seaborn jupyter
+pip install pandas numpy matplotlib seaborn jupyter ipywidgets
 ```
 
-### Preparação dos Dados
+#### Preparação dos Dados
 1. Coloque os dados de entrada nas pastas apropriadas (veja READMEs específicos)
 2. Verifique se os arquivos seguem a nomenclatura esperada
 3. Execute o notebook `analise_energia_total.ipynb`
 
-### Execução
+#### Execução Local
 1. Abra o Jupyter Notebook:
    ```bash
    jupyter notebook analise_energia_total.ipynb

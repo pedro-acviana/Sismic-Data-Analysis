@@ -128,9 +128,20 @@
         .chart-container {
             background: white;
             border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            min-height: 600px;
+        }
+
+        .individual-chart {
+            margin-bottom: 40px;
+            padding: 25px;
+            background-color: #f8f9fa;
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            min-height: 500px;
         }
 
         .download-btn {
@@ -468,17 +479,19 @@
                 const channelData = data.grouped[channelStat.plane];
                 const energies = channelData.map(d => d.total_energy);
                 
-                // Criar div para este canal específico
-                const channelDiv = document.createElement('div');
-                channelDiv.id = `channel-${channelStat.plane}`;
-                channelDiv.style.marginBottom = '30px';
-                channelDiv.style.backgroundColor = '#f8f9fa';
-                channelDiv.style.padding = '20px';
-                channelDiv.style.borderRadius = '10px';
-                channelDiv.style.border = '2px solid #e9ecef';
-                energyChartContainer.appendChild(channelDiv);
-                
-                // Trace do histograma para este canal
+        // Criar div para este canal específico
+        const channelDiv = document.createElement('div');
+        channelDiv.id = `channel-${channelStat.plane}`;
+        channelDiv.className = 'individual-chart';
+        channelDiv.style.marginBottom = '40px';
+        channelDiv.style.backgroundColor = '#f8f9fa';
+        channelDiv.style.padding = '25px';
+        channelDiv.style.borderRadius = '15px';
+        channelDiv.style.border = '2px solid #e9ecef';
+        channelDiv.style.boxShadow = '0 3px 10px rgba(0,0,0,0.1)';
+        channelDiv.style.minHeight = '500px';
+        channelDiv.style.height = '600px';
+        energyChartContainer.appendChild(channelDiv);                // Trace do histograma para este canal
                 const histogramTrace = {
                     x: energies,
                     type: 'histogram',
@@ -582,11 +595,13 @@
                         font: { size: 10, color: '#2c3e50' }
                     }],
                     margin: {
-                        l: 60,
-                        r: 50,
-                        t: 80,
-                        b: 50
-                    }
+                        l: 80,
+                        r: 60,
+                        t: 120,
+                        b: 80
+                    },
+                    height: 500,
+                    autosize: true
                 };
                 
                 // Verificar se deve usar escala logarítmica
@@ -622,7 +637,14 @@
                 title: 'Comparação de Energia Média entre Canais',
                 xaxis: { title: 'Canal' },
                 yaxis: { title: 'Energia Média' },
-                showlegend: false
+                showlegend: false,
+                height: 450,
+                margin: {
+                    l: 80,
+                    r: 60,
+                    t: 80,
+                    b: 60
+                }
             };
 
             Plotly.newPlot('noiseChart', [comparisonTrace], comparisonLayout);

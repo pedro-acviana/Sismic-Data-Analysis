@@ -235,6 +235,14 @@
                     <div id="detailedStats" style="font-family: 'Courier New', monospace; background-color: #f8f9fa; padding: 20px; border-radius: 10px; border-left: 4px solid #007bff;"></div>
                 </div>
 
+                <div class="chart-container">
+                    <h3 style="color: #2c3e50; margin-bottom: 15px;">📊 Histogramas Individuais de Energia por Canal</h3>
+                    <p style="color: #666; margin-bottom: 20px; font-style: italic;">
+                        Cada canal é apresentado em um gráfico separado com sua distribuição de energia total E = √(x² + y² + z²)
+                    </p>
+                    <div id="energyChart"></div>
+                </div>
+
                 <div style="text-align: center; margin-top: 30px;">
                     <button class="download-btn" onclick="downloadResults()">
                         💾 Baixar Resultados (CSV)
@@ -441,7 +449,7 @@
             `;
             document.getElementById('statsGrid').innerHTML = statsHtml;
 
-            // Histogramas individuais por canal - separados lado a lado
+            // Histogramas individuais por canal - CADA UM EM UM GRÁFICO SEPARADO
             const colors = ['#2E8B57', '#FF6347', '#4169E1', '#9932CC', '#FF8C00'];
             const channelColors = {
                 'G': '#2E8B57',
@@ -451,24 +459,27 @@
                 'B': '#FF8C00'
             };
             
-            // Criar subplots para cada canal
-            const numChannels = data.stats.length;
-            const subplot_titles = data.stats.map(stat => `Canal ${stat.plane}<br>(${stat.count.toLocaleString()} registros)`);
+            // Criar container para múltiplos gráficos
+            const energyChartContainer = document.getElementById('energyChart');
+            energyChartContainer.innerHTML = ''; // Limpar conteúdo anterior
             
-            // Configurar subplot layout
-            const rows = 1;
-            const cols = numChannels;
-            
-            // Criar traces individuais para cada canal
-            const energyTraces = [];
-            const annotations = [];
-            
+            // Criar um gráfico separado para cada canal
             data.stats.forEach((channelStat, index) => {
                 const channelData = data.grouped[channelStat.plane];
                 const energies = channelData.map(d => d.total_energy);
                 
-                // Histograma para o canal
-                energyTraces.push({
+                // Criar div para este canal específico
+                const channelDiv = document.createElement('div');
+                channelDiv.id = `channel-${channelStat.plane}`;
+                channelDiv.style.marginBottom = '30px';
+                channelDiv.style.backgroundColor = '#f8f9fa';
+                channelDiv.style.padding = '20px';
+                channelDiv.style.borderRadius = '10px';
+                channelDiv.style.border = '2px solid #e9ecef';
+                energyChartContainer.appendChild(channelDiv);
+                
+                // Trace do histograma para este canal
+                const histogramTrace = {
                     x: energies,
                     type: 'histogram',
                     name: `Canal ${channelStat.plane}`,
@@ -480,101 +491,119 @@
                             width: 0.5
                         }
                     },
-                    nbinsx: 30,
-                    xaxis: `x${index + 1}`,
-                    yaxis: `y${index + 1}`,
+                    nbinsx: 50,
                     showlegend: false
-                });
+                };
                 
-                // Linhas verticais para média e mediana
-                const mean = channelStat.energy_mean;
-                const median = channelStat.energy_median;
+                // Calcular limites para as linhas verticais
+                const maxCount = Math.max(...Object.values(
+                    energies.reduce((acc, val) => {
+                        const bin = Math.floor(val / ((Math.max(...energies) - Math.min(...energies)) / 50));
+                        acc[bin] = (acc[bin] || 0) + 1;
+                        return acc;
+                    }, {})
+                ));
                 
-                // Linha da média
-                energyTraces.push({
-                    x: [mean, mean],
-                    y: [0, 1000], // Valor alto para cobrir o histograma
+                // Linha vertical para média
+                const meanLine = {
+                    x: [channelStat.energy_mean, channelStat.energy_mean],
+                    y: [0, maxCount * 1.1],
                     mode: 'lines',
                     line: {
                         color: 'red',
-                        width: 2,
+                        width: 3,
                         dash: 'dash'
                     },
-                    name: index === 0 ? 'Média' : '',
-                    showlegend: index === 0,
-                    xaxis: `x${index + 1}`,
-                    yaxis: `y${index + 1}`
-                });
+                    name: `Média: ${channelStat.energy_mean.toExponential(2)}`,
+                    showlegend: true
+                };
                 
-                // Linha da mediana
-                energyTraces.push({
-                    x: [median, median],
-                    y: [0, 1000], // Valor alto para cobrir o histograma
+                // Linha vertical para mediana
+                const medianLine = {
+                    x: [channelStat.energy_median, channelStat.energy_median],
+                    y: [0, maxCount * 1.1],
                     mode: 'lines',
                     line: {
                         color: 'orange',
-                        width: 2,
+                        width: 3,
                         dash: 'dot'
                     },
-                    name: index === 0 ? 'Mediana' : '',
-                    showlegend: index === 0,
-                    xaxis: `x${index + 1}`,
-                    yaxis: `y${index + 1}`
-                });
+                    name: `Mediana: ${channelStat.energy_median.toExponential(2)}`,
+                    showlegend: true
+                };
                 
-                // Adicionar anotação com estatísticas
-                const statsText = `Min: ${channelStat.energy_min.toExponential(2)}<br>` +
-                                `Max: ${channelStat.energy_max.toExponential(2)}<br>` +
-                                `Std: ${channelStat.energy_std.toExponential(2)}`;
+                // Layout para este canal específico
+                const channelLayout = {
+                    title: {
+                        text: `Canal ${channelStat.plane} - Distribuição de Energia Total<br><sub>${channelStat.count.toLocaleString()} registros</sub>`,
+                        font: { size: 16, color: '#2c3e50' }
+                    },
+                    xaxis: {
+                        title: {
+                            text: 'Energia Total E = √(x² + y² + z²)',
+                            font: { size: 14 }
+                        },
+                        gridcolor: '#e9ecef',
+                        zeroline: false
+                    },
+                    yaxis: {
+                        title: {
+                            text: 'Frequência',
+                            font: { size: 14 }
+                        },
+                        gridcolor: '#e9ecef',
+                        zeroline: false
+                    },
+                    plot_bgcolor: 'white',
+                    paper_bgcolor: 'white',
+                    showlegend: true,
+                    legend: {
+                        x: 0.7,
+                        y: 0.9,
+                        bgcolor: 'rgba(255,255,255,0.8)',
+                        bordercolor: '#2c3e50',
+                        borderwidth: 1
+                    },
+                    annotations: [{
+                        x: 0.02,
+                        y: 0.98,
+                        xref: 'paper',
+                        yref: 'paper',
+                        text: `<b>Estatísticas:</b><br>` +
+                              `Min: ${channelStat.energy_min.toExponential(2)}<br>` +
+                              `Max: ${channelStat.energy_max.toExponential(2)}<br>` +
+                              `Std: ${channelStat.energy_std.toExponential(2)}<br>` +
+                              `Range: ${channelStat.energy_range.toExponential(2)}`,
+                        showarrow: false,
+                        align: 'left',
+                        bgcolor: 'rgba(255, 255, 255, 0.9)',
+                        bordercolor: channelColors[channelStat.plane] || colors[index % colors.length],
+                        borderwidth: 2,
+                        font: { size: 10, color: '#2c3e50' }
+                    }],
+                    margin: {
+                        l: 60,
+                        r: 50,
+                        t: 80,
+                        b: 50
+                    }
+                };
                 
-                annotations.push({
-                    x: 0.02,
-                    y: 0.98,
-                    xref: `x${index + 1} domain`,
-                    yref: `y${index + 1} domain`,
-                    text: statsText,
-                    showarrow: false,
-                    align: 'left',
-                    bgcolor: 'rgba(255, 255, 255, 0.8)',
-                    bordercolor: 'black',
-                    borderwidth: 1,
-                    font: { size: 9 }
-                });
-            });
-
-            // Layout para subplots
-            const energyLayout = {
-                title: {
-                    text: 'Distribuição de Energia Total E = √(x² + y² + z²) por Canal',
-                    font: { size: 16 }
-                },
-                showlegend: true,
-                annotations: annotations,
-                grid: {
-                    rows: rows,
-                    columns: cols,
-                    pattern: 'independent',
-                    subplots: data.stats.map((_, i) => [`xy${i + 1}`])
+                // Verificar se deve usar escala logarítmica
+                const energyRange = channelStat.energy_max / channelStat.energy_min;
+                if (energyRange > 1000) {
+                    channelLayout.xaxis.type = 'log';
+                    channelLayout.title.text += '<br><sub>(Escala Logarítmica)</sub>';
                 }
-            };
-            
-            // Configurar eixos para cada subplot
-            data.stats.forEach((channelStat, index) => {
-                const xaxis = index === 0 ? 'xaxis' : `xaxis${index + 1}`;
-                const yaxis = index === 0 ? 'yaxis' : `yaxis${index + 1}`;
                 
-                energyLayout[xaxis] = {
-                    title: 'Energia Total',
-                    domain: [index / numChannels, (index + 1) / numChannels - 0.02]
-                };
-                
-                energyLayout[yaxis] = {
-                    title: index === 0 ? 'Frequência' : '',
-                    domain: [0, 1]
-                };
+                // Criar o gráfico para este canal
+                Plotly.newPlot(channelDiv, [histogramTrace, meanLine, medianLine], channelLayout, {
+                    responsive: true,
+                    displayModeBar: true,
+                    modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d'],
+                    displaylogo: false
+                });
             });
-
-            Plotly.newPlot('energyChart', energyTraces, energyLayout);
 
             // Gráfico de comparação de médias entre canais
             const comparisonTrace = {

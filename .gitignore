@@ -1,0 +1,53 @@
+# Dados CSV - não incluir no repositório
+*.csv
+*.xlsx
+*.xls
+
+# Dados sísmicos
+*.mseed
+*.seed
+*.zip
+
+# Resultados gerados
+resultados_energia/
+!resultados_energia/README.md
+
+# Arquivos temporários e cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# VS Code
+.vscode/
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Arquivos de backup
+*~
+*.bak
+*.backup
+
+# Arquivos grandes de dados
+mseeds/
+*.h5
+*.hdf5
+*.parquet
+
+# Imagens geradas (opcional - descomente se não quiser versionar)
+# *.png
+# *.jpg
+# *.jpeg
+# *.pdf

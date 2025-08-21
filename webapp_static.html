@@ -189,8 +189,8 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🌍 Análise de Energia Sísmica</h1>
-            <p>Processamento e análise de dados sísmicos - Braskem</p>
+            <h1>🌍 Análise de Energia Sísmica por Canal</h1>
+            <p>Processamento e análise de energia total por canal - Fórmula: E = √(x² + y² + z²)</p>
         </div>
         
         <div class="content">
@@ -202,7 +202,7 @@
                 </button>
                 <input type="file" id="fileInput" accept=".csv" onchange="handleFile(this.files[0])">
                 <p style="margin-top: 15px; color: #7f8c8d; font-size: 0.9rem;">
-                    Formato esperado: event_id, plane, sensor, x_amplitude, y_amplitude, z_amplitude
+                    Formato esperado: plane (canal), x_amplitude, y_amplitude, z_amplitude
                 </p>
             </div>
 
@@ -221,12 +221,12 @@
                 </div>
 
                 <div class="chart-container">
-                    <h3 style="color: #2c3e50; margin-bottom: 15px;">Distribuição de Energia por Evento</h3>
+                    <h3 style="color: #2c3e50; margin-bottom: 15px;">Distribuição de Energia Total por Canal</h3>
                     <div id="energyChart"></div>
                 </div>
 
                 <div class="chart-container">
-                    <h3 style="color: #2c3e50; margin-bottom: 15px;">Detecção de Ruído</h3>
+                    <h3 style="color: #2c3e50; margin-bottom: 15px;">Comparação de Energia Média entre Canais</h3>
                     <div id="noiseChart"></div>
                 </div>
 
@@ -331,7 +331,7 @@
 
         function processData(data) {
             // Validar estrutura dos dados
-            const requiredColumns = ['x_amplitude', 'y_amplitude', 'z_amplitude', 'event_id'];
+            const requiredColumns = ['x_amplitude', 'y_amplitude', 'z_amplitude', 'plane'];
             const columns = Object.keys(data[0] || {});
             
             for (let col of requiredColumns) {
@@ -352,26 +352,24 @@
                     x_amplitude: x,
                     y_amplitude: y,
                     z_amplitude: z,
-                    energy: energy,
-                    event_id: row.event_id,
-                    plane: row.plane || 'N/A',
-                    sensor: row.sensor || 'N/A'
+                    total_energy: energy,
+                    plane: row.plane
                 };
             });
 
-            // Agrupar por event_id
+            // Agrupar por canal/plano
             const groupedData = {};
             processed.forEach(row => {
-                if (!groupedData[row.event_id]) {
-                    groupedData[row.event_id] = [];
+                if (!groupedData[row.plane]) {
+                    groupedData[row.plane] = [];
                 }
-                groupedData[row.event_id].push(row);
+                groupedData[row.plane].push(row);
             });
 
-            // Calcular estatísticas por evento
-            const eventStats = Object.keys(groupedData).map(eventId => {
-                const eventData = groupedData[eventId];
-                const energies = eventData.map(d => d.energy);
+            // Calcular estatísticas por canal
+            const channelStats = Object.keys(groupedData).map(plane => {
+                const channelData = groupedData[plane];
+                const energies = channelData.map(d => d.total_energy);
                 
                 const mean = energies.reduce((a, b) => a + b, 0) / energies.length;
                 const variance = energies.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / energies.length;
@@ -379,29 +377,30 @@
                 const max = Math.max(...energies);
                 const min = Math.min(...energies);
                 
-                // Detecção de ruído (valores > média + 2*desvio padrão)
-                const threshold = mean + 2 * std;
-                const noiseCount = energies.filter(e => e > threshold).length;
-                const noisePercentage = (noiseCount / energies.length) * 100;
+                // Calcular percentis
+                const sortedEnergies = energies.sort((a, b) => a - b);
+                const q25 = sortedEnergies[Math.floor(0.25 * sortedEnergies.length)];
+                const q75 = sortedEnergies[Math.floor(0.75 * sortedEnergies.length)];
+                const median = sortedEnergies[Math.floor(0.5 * sortedEnergies.length)];
                 
                 return {
-                    event_id: eventId,
-                    count: eventData.length,
+                    plane: plane,
+                    count: channelData.length,
                     energy_mean: mean,
                     energy_std: std,
                     energy_max: max,
                     energy_min: min,
-                    energy_variance: variance,
-                    noise_threshold: threshold,
-                    noise_count: noiseCount,
-                    noise_percentage: noisePercentage
+                    energy_median: median,
+                    energy_q25: q25,
+                    energy_q75: q75,
+                    energy_range: max - min
                 };
             });
 
             processedData = {
                 original: processed,
                 grouped: groupedData,
-                stats: eventStats
+                stats: channelStats
             };
 
             displayResults(processedData);
@@ -412,15 +411,15 @@
             document.getElementById('results').style.display = 'block';
 
             // Estatísticas gerais
-            const totalEvents = data.stats.length;
+            const totalChannels = data.stats.length;
             const totalSamples = data.original.length;
-            const avgEnergyOverall = data.original.reduce((a, b) => a + b.energy, 0) / totalSamples;
-            const totalNoiseDetected = data.stats.reduce((a, b) => a + b.noise_count, 0);
+            const avgEnergyOverall = data.original.reduce((a, b) => a + b.total_energy, 0) / totalSamples;
+            const maxEnergyOverall = Math.max(...data.original.map(d => d.total_energy));
 
             const statsHtml = `
                 <div class="stat-card">
-                    <div class="stat-value">${totalEvents}</div>
-                    <div class="stat-label">Eventos</div>
+                    <div class="stat-value">${totalChannels}</div>
+                    <div class="stat-label">Canais</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value">${totalSamples.toLocaleString()}</div>
@@ -431,59 +430,63 @@
                     <div class="stat-label">Energia Média</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">${totalNoiseDetected}</div>
-                    <div class="stat-label">Ruídos Detectados</div>
+                    <div class="stat-value">${maxEnergyOverall.toFixed(3)}</div>
+                    <div class="stat-label">Energia Máxima</div>
                 </div>
             `;
             document.getElementById('statsGrid').innerHTML = statsHtml;
 
-            // Gráfico de energia por evento
-            const energyTrace = {
-                x: data.stats.map(s => s.event_id),
-                y: data.stats.map(s => s.energy_mean),
-                type: 'bar',
-                name: 'Energia Média',
-                marker: {
-                    color: 'rgba(52, 152, 219, 0.8)',
-                    line: {
-                        color: 'rgba(52, 152, 219, 1)',
-                        width: 1
-                    }
-                }
-            };
+            // Gráfico de energia por canal - Histograma
+            const energyTraces = [];
+            const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57'];
+            
+            data.stats.forEach((channelStat, index) => {
+                const channelData = data.grouped[channelStat.plane];
+                const energies = channelData.map(d => d.total_energy);
+                
+                energyTraces.push({
+                    x: energies,
+                    type: 'histogram',
+                    name: `Canal ${channelStat.plane}`,
+                    opacity: 0.7,
+                    marker: {
+                        color: colors[index % colors.length]
+                    },
+                    nbinsx: 30
+                });
+            });
 
             const energyLayout = {
-                title: 'Energia Média por Evento',
-                xaxis: { title: 'Event ID' },
-                yaxis: { title: 'Energia' },
-                showlegend: false
+                title: 'Distribuição de Energia Total por Canal',
+                xaxis: { title: 'Energia Total E = √(x² + y² + z²)' },
+                yaxis: { title: 'Frequência' },
+                barmode: 'overlay',
+                showlegend: true
             };
 
-            Plotly.newPlot('energyChart', [energyTrace], energyLayout);
+            Plotly.newPlot('energyChart', energyTraces, energyLayout);
 
-            // Gráfico de detecção de ruído
-            const noiseTrace = {
-                x: data.stats.map(s => s.event_id),
-                y: data.stats.map(s => s.noise_percentage),
+            // Gráfico de comparação de médias entre canais
+            const comparisonTrace = {
+                x: data.stats.map(s => s.plane),
+                y: data.stats.map(s => s.energy_mean),
                 type: 'bar',
-                name: 'Percentual de Ruído',
+                name: 'Energia Média por Canal',
                 marker: {
-                    color: data.stats.map(s => s.noise_percentage > 10 ? 'rgba(231, 76, 60, 0.8)' : 'rgba(46, 204, 113, 0.8)'),
-                    line: {
-                        color: 'rgba(52, 73, 94, 1)',
-                        width: 1
-                    }
-                }
+                    color: data.stats.map((s, i) => colors[i % colors.length])
+                },
+                text: data.stats.map(s => s.energy_mean.toFixed(4)),
+                textposition: 'auto'
             };
 
-            const noiseLayout = {
-                title: 'Percentual de Ruído Detectado por Evento',
-                xaxis: { title: 'Event ID' },
-                yaxis: { title: 'Percentual de Ruído (%)' },
+            const comparisonLayout = {
+                title: 'Comparação de Energia Média entre Canais',
+                xaxis: { title: 'Canal' },
+                yaxis: { title: 'Energia Média' },
                 showlegend: false
             };
 
-            Plotly.newPlot('noiseChart', [noiseTrace], noiseLayout);
+            Plotly.newPlot('noiseChart', [comparisonTrace], comparisonLayout);
         }
 
         function downloadResults() {
@@ -494,16 +497,16 @@
 
             // Preparar dados para CSV
             const csvData = processedData.stats.map(stat => ({
-                event_id: stat.event_id,
+                plane: stat.plane,
                 count: stat.count,
                 energy_mean: stat.energy_mean.toFixed(6),
                 energy_std: stat.energy_std.toFixed(6),
                 energy_max: stat.energy_max.toFixed(6),
                 energy_min: stat.energy_min.toFixed(6),
-                energy_variance: stat.energy_variance.toFixed(6),
-                noise_threshold: stat.noise_threshold.toFixed(6),
-                noise_count: stat.noise_count,
-                noise_percentage: stat.noise_percentage.toFixed(2)
+                energy_median: stat.energy_median.toFixed(6),
+                energy_range: stat.energy_range.toFixed(6),
+                energy_q25: stat.energy_q25.toFixed(6),
+                energy_q75: stat.energy_q75.toFixed(6)
             }));
 
             // Converter para CSV
@@ -514,13 +517,13 @@
             const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
             link.setAttribute('href', url);
-            link.setAttribute('download', `${originalFileName}_results.csv`);
+            link.setAttribute('download', `${originalFileName}_energia_canais_results.csv`);
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
 
-            showSuccess('Arquivo de resultados baixado com sucesso!');
+            showSuccess('Arquivo de resultados de energia por canal baixado com sucesso!');
         }
     </script>
 </body>

@@ -229,6 +229,11 @@
                     <h3 style="color: #2c3e50; margin-bottom: 15px;">Comparação de Energia Média entre Canais</h3>
                     <div id="noiseChart"></div>
                 </div>
+                
+                <div class="chart-container">
+                    <h3 style="color: #2c3e50; margin-bottom: 15px;">📊 Estatísticas Detalhadas por Canal</h3>
+                    <div id="detailedStats" style="font-family: 'Courier New', monospace; background-color: #f8f9fa; padding: 20px; border-radius: 10px; border-left: 4px solid #007bff;"></div>
+                </div>
 
                 <div style="text-align: center; margin-top: 30px;">
                     <button class="download-btn" onclick="downloadResults()">
@@ -436,33 +441,138 @@
             `;
             document.getElementById('statsGrid').innerHTML = statsHtml;
 
-            // Gráfico de energia por canal - Histograma
+            // Histogramas individuais por canal - separados lado a lado
+            const colors = ['#2E8B57', '#FF6347', '#4169E1', '#9932CC', '#FF8C00'];
+            const channelColors = {
+                'G': '#2E8B57',
+                'H': '#FF6347', 
+                'E': '#4169E1',
+                'A': '#9932CC',
+                'B': '#FF8C00'
+            };
+            
+            // Criar subplots para cada canal
+            const numChannels = data.stats.length;
+            const subplot_titles = data.stats.map(stat => `Canal ${stat.plane}<br>(${stat.count.toLocaleString()} registros)`);
+            
+            // Configurar subplot layout
+            const rows = 1;
+            const cols = numChannels;
+            
+            // Criar traces individuais para cada canal
             const energyTraces = [];
-            const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57'];
+            const annotations = [];
             
             data.stats.forEach((channelStat, index) => {
                 const channelData = data.grouped[channelStat.plane];
                 const energies = channelData.map(d => d.total_energy);
                 
+                // Histograma para o canal
                 energyTraces.push({
                     x: energies,
                     type: 'histogram',
                     name: `Canal ${channelStat.plane}`,
-                    opacity: 0.7,
                     marker: {
-                        color: colors[index % colors.length]
+                        color: channelColors[channelStat.plane] || colors[index % colors.length],
+                        opacity: 0.7,
+                        line: {
+                            color: 'black',
+                            width: 0.5
+                        }
                     },
-                    nbinsx: 30
+                    nbinsx: 30,
+                    xaxis: `x${index + 1}`,
+                    yaxis: `y${index + 1}`,
+                    showlegend: false
+                });
+                
+                // Linhas verticais para média e mediana
+                const mean = channelStat.energy_mean;
+                const median = channelStat.energy_median;
+                
+                // Linha da média
+                energyTraces.push({
+                    x: [mean, mean],
+                    y: [0, 1000], // Valor alto para cobrir o histograma
+                    mode: 'lines',
+                    line: {
+                        color: 'red',
+                        width: 2,
+                        dash: 'dash'
+                    },
+                    name: index === 0 ? 'Média' : '',
+                    showlegend: index === 0,
+                    xaxis: `x${index + 1}`,
+                    yaxis: `y${index + 1}`
+                });
+                
+                // Linha da mediana
+                energyTraces.push({
+                    x: [median, median],
+                    y: [0, 1000], // Valor alto para cobrir o histograma
+                    mode: 'lines',
+                    line: {
+                        color: 'orange',
+                        width: 2,
+                        dash: 'dot'
+                    },
+                    name: index === 0 ? 'Mediana' : '',
+                    showlegend: index === 0,
+                    xaxis: `x${index + 1}`,
+                    yaxis: `y${index + 1}`
+                });
+                
+                // Adicionar anotação com estatísticas
+                const statsText = `Min: ${channelStat.energy_min.toExponential(2)}<br>` +
+                                `Max: ${channelStat.energy_max.toExponential(2)}<br>` +
+                                `Std: ${channelStat.energy_std.toExponential(2)}`;
+                
+                annotations.push({
+                    x: 0.02,
+                    y: 0.98,
+                    xref: `x${index + 1} domain`,
+                    yref: `y${index + 1} domain`,
+                    text: statsText,
+                    showarrow: false,
+                    align: 'left',
+                    bgcolor: 'rgba(255, 255, 255, 0.8)',
+                    bordercolor: 'black',
+                    borderwidth: 1,
+                    font: { size: 9 }
                 });
             });
 
+            // Layout para subplots
             const energyLayout = {
-                title: 'Distribuição de Energia Total por Canal',
-                xaxis: { title: 'Energia Total E = √(x² + y² + z²)' },
-                yaxis: { title: 'Frequência' },
-                barmode: 'overlay',
-                showlegend: true
+                title: {
+                    text: 'Distribuição de Energia Total E = √(x² + y² + z²) por Canal',
+                    font: { size: 16 }
+                },
+                showlegend: true,
+                annotations: annotations,
+                grid: {
+                    rows: rows,
+                    columns: cols,
+                    pattern: 'independent',
+                    subplots: data.stats.map((_, i) => [`xy${i + 1}`])
+                }
             };
+            
+            // Configurar eixos para cada subplot
+            data.stats.forEach((channelStat, index) => {
+                const xaxis = index === 0 ? 'xaxis' : `xaxis${index + 1}`;
+                const yaxis = index === 0 ? 'yaxis' : `yaxis${index + 1}`;
+                
+                energyLayout[xaxis] = {
+                    title: 'Energia Total',
+                    domain: [index / numChannels, (index + 1) / numChannels - 0.02]
+                };
+                
+                energyLayout[yaxis] = {
+                    title: index === 0 ? 'Frequência' : '',
+                    domain: [0, 1]
+                };
+            });
 
             Plotly.newPlot('energyChart', energyTraces, energyLayout);
 
@@ -487,6 +597,58 @@
             };
 
             Plotly.newPlot('noiseChart', [comparisonTrace], comparisonLayout);
+            
+            // Gerar estatísticas detalhadas por canal
+            let detailedStatsHtml = '<pre style="margin: 0; color: #2c3e50; line-height: 1.6;">';
+            detailedStatsHtml += '='.repeat(60) + '\n';
+            detailedStatsHtml += '           ESTATÍSTICAS DETALHADAS POR CANAL\n';
+            detailedStatsHtml += '='.repeat(60) + '\n\n';
+            
+            data.stats.forEach(channelStat => {
+                const channelData = data.grouped[channelStat.plane];
+                const energies = channelData.map(d => d.total_energy);
+                
+                // Calcular percentis
+                const sortedEnergies = energies.sort((a, b) => a - b);
+                const p25 = sortedEnergies[Math.floor(0.25 * sortedEnergies.length)] || 0;
+                const p75 = sortedEnergies[Math.floor(0.75 * sortedEnergies.length)] || 0;
+                const p90 = sortedEnergies[Math.floor(0.90 * sortedEnergies.length)] || 0;
+                const p95 = sortedEnergies[Math.floor(0.95 * sortedEnergies.length)] || 0;
+                
+                // Calcular intervalo mais frequente
+                const bins = 20;
+                const min = channelStat.energy_min;
+                const max = channelStat.energy_max;
+                const binSize = (max - min) / bins;
+                
+                const histogramCounts = new Array(bins).fill(0);
+                energies.forEach(energy => {
+                    const binIndex = Math.min(Math.floor((energy - min) / binSize), bins - 1);
+                    if (binIndex >= 0) histogramCounts[binIndex]++;
+                });
+                
+                const maxFreqBin = histogramCounts.indexOf(Math.max(...histogramCounts));
+                const modalRangeStart = min + maxFreqBin * binSize;
+                const modalRangeEnd = min + (maxFreqBin + 1) * binSize;
+                const maxFreqCount = histogramCounts[maxFreqBin];
+                
+                detailedStatsHtml += `<strong>Canal ${channelStat.plane}:</strong>\n`;
+                detailedStatsHtml += `  Registros: ${channelStat.count.toLocaleString()}\n`;
+                detailedStatsHtml += `  Média: ${channelStat.energy_mean.toExponential(6)}\n`;
+                detailedStatsHtml += `  Mediana: ${channelStat.energy_median.toExponential(6)}\n`;
+                detailedStatsHtml += `  Desvio Padrão: ${channelStat.energy_std.toExponential(6)}\n`;
+                detailedStatsHtml += `  Mínimo: ${channelStat.energy_min.toExponential(6)}\n`;
+                detailedStatsHtml += `  Máximo: ${channelStat.energy_max.toExponential(6)}\n`;
+                detailedStatsHtml += `  Range: ${channelStat.energy_range.toExponential(6)}\n`;
+                detailedStatsHtml += `  25º Percentil: ${p25.toExponential(6)}\n`;
+                detailedStatsHtml += `  75º Percentil: ${p75.toExponential(6)}\n`;
+                detailedStatsHtml += `  90º Percentil: ${p90.toExponential(6)}\n`;
+                detailedStatsHtml += `  95º Percentil: ${p95.toExponential(6)}\n`;
+                detailedStatsHtml += `  Intervalo mais frequente: [${modalRangeStart.toExponential(6)} - ${modalRangeEnd.toExponential(6)}] (${maxFreqCount} ocorrências)\n\n`;
+            });
+            
+            detailedStatsHtml += '</pre>';
+            document.getElementById('detailedStats').innerHTML = detailedStatsHtml;
         }
 
         function downloadResults() {

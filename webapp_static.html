@@ -202,7 +202,7 @@
                 </button>
                 <input type="file" id="fileInput" accept=".csv" onchange="handleFile(this.files[0])">
                 <p style="margin-top: 15px; color: #7f8c8d; font-size: 0.9rem;">
-                    Formato esperado: colunas x, y, z, event_id
+                    Formato esperado: event_id, plane, sensor, x_amplitude, y_amplitude, z_amplitude
                 </p>
             </div>
 
@@ -331,7 +331,7 @@
 
         function processData(data) {
             // Validar estrutura dos dados
-            const requiredColumns = ['x', 'y', 'z', 'event_id'];
+            const requiredColumns = ['x_amplitude', 'y_amplitude', 'z_amplitude', 'event_id'];
             const columns = Object.keys(data[0] || {});
             
             for (let col of requiredColumns) {
@@ -342,18 +342,20 @@
 
             // Processar dados
             const processed = data.map(row => {
-                const x = parseFloat(row.x) || 0;
-                const y = parseFloat(row.y) || 0;
-                const z = parseFloat(row.z) || 0;
+                const x = parseFloat(row.x_amplitude) || 0;
+                const y = parseFloat(row.y_amplitude) || 0;
+                const z = parseFloat(row.z_amplitude) || 0;
                 const energy = Math.sqrt(x*x + y*y + z*z);
                 
                 return {
                     ...row,
-                    x: x,
-                    y: y,
-                    z: z,
+                    x_amplitude: x,
+                    y_amplitude: y,
+                    z_amplitude: z,
                     energy: energy,
-                    event_id: row.event_id
+                    event_id: row.event_id,
+                    plane: row.plane || 'N/A',
+                    sensor: row.sensor || 'N/A'
                 };
             });
 

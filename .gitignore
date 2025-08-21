@@ -49,7 +49,7 @@ mseeds/
 # Arquivos específicos do projeto
 Front_end.png
 rdmseed.m
-Braskem_dados/Eventos/Feature Analysis.ipynb
+dados_sismologicos/Eventos/Feature Analysis.ipynb
 
 # Imagens geradas (opcional - descomente se não quiser versionar)
 # *.png

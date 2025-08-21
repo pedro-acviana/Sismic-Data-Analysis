@@ -158,4 +158,4 @@ Após o processamento, os resultados são salvos em `resultados_energia/`:
 
 ---
 
-**Nota**: Esta pasta contém dados processados prontos para análise. Para dados brutos, consulte `Braskem_dados/Eventos/`.
+**Nota**: Esta pasta contém dados processados prontos para análise. Para dados brutos, consulte `dados_sismologicos/Eventos/`.

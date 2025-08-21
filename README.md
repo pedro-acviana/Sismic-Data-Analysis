@@ -42,7 +42,7 @@ data_analysis/
 ├── index.html                            # 🏠 Página inicial da aplicação web
 ├── requirements.txt                      # 📦 Dependências Python
 ├── .github/workflows/deploy.yml          # 🚀 Deploy automático GitHub Pages
-├── Braskem_dados/                        # Dados de entrada (ver README específico)
+├── dados_sismologicos/                   # Dados de entrada (ver README específico)
 │   └── Eventos/                          # Dados de eventos sísmicos
 ├── resultados_csv/                       # Resultados processados (ver README específico)
 └── resultados_energia/                   # Resultados da análise de energia (gerado automaticamente)
@@ -132,7 +132,7 @@ O projeto foi desenvolvido e testado com:
 ## 📁 Estrutura de Dados Esperada
 
 Consulte os arquivos README específicos em cada pasta:
-- `Braskem_dados/Eventos/README.md` - Formato dos dados de eventos
+- `dados_sismologicos/Eventos/README.md` - Formato dos dados de eventos
 - `resultados_csv/README.md` - Formato dos resultados processados
 
 ## 🤝 Contribuindo
